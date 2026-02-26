@@ -538,9 +538,8 @@ def admin_delete_user(user_id):
     flash('User and all associated files deleted successfully', 'success')
     return redirect(url_for('admin_dashboard'))
     
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        app.run(debug=True, host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
