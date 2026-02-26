@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Upload File{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card p-4">
+    <h3 class="text-center mb-4">Upload & Encrypt File</h3>
+
+    <form method="POST"
+          action="{{ url_for('upload') }}"
+          enctype="multipart/form-data">
+
+      <!-- File Upload -->
+      <div class="mb-3">
+        <label>Select File</label>
+        <input type="file"
+               class="form-control"
+               id="fileInput"
+               name="file"
+               required>
+      </div>
+
+      <!-- Password -->
+      <div class="mb-3">
+        <label>Encryption Password (6 characters)</label>
+
+        <div class="input-group">
+          <input type="password"
+                 class="form-control"
+                 id="password"
+                 name="password"
+                 minlength="6"
+                 maxlength="6"
+                 required>
+
+          <button type="button"
+                  class="btn btn-secondary"
+                  onclick="generateKey()">Key</button>
+
+          <button type="button"
+                  class="btn btn-secondary"
+                  onclick="togglePassword()">👁</button>
+
+          <button type="button"
+                  class="btn btn-secondary"
+                  onclick="copyPassword()">📋</button>
+        </div>
+      </div>
+
+      <!-- Expiry Settings -->
+      <div class="mb-4">
+        <label class="form-label fw-bold">File Expiry (Optional)</label>
+        <div class="row g-2">
+          <div class="col-md-6">
+            <input type="number" 
+                   class="form-control" 
+                   id="expiry_value" 
+                   name="expiry_value" 
+                   min="1" 
+                   placeholder="Enter value">
+          </div>
+          <div class="col-md-6">
+            <select class="form-select" id="expiry_unit" name="expiry_unit">
+              <option value="">No expiry</option>
+              <option value="minutes">Minutes</option>
+              <option value="hours">Hours</option>
+              <option value="days">Days</option>
+              <option value="months">Months</option>
+            </select>
+          </div>
+        </div>
+        <div id="expiryPreview" class="mt-2 text-muted small" style="min-height: 24px;"></div>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn btn-primary w-100">
+        Encrypt & Upload
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Generate 6-character key
+  function generateKey() {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let key = "";
+    for (let i = 0; i < 6; i++) {
+      key += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    document.getElementById("password").value = key;
+  }
+
+  // Show / Hide password
+  function togglePassword() {
+    const pass = document.getElementById("password");
+    pass.type = pass.type === "password" ? "text" : "password";
+  }
+
+  // Copy password
+  function copyPassword() {
+    const pass = document.getElementById("password");
+    if (pass.value === "") {
+      alert("Enter or generate a password first.");
+      return;
+    }
+    navigator.clipboard.writeText(pass.value);
+    alert("Password copied!");
+  }
+
+  // Calculate and display expiry preview
+  function updateExpiryPreview() {
+    const value = document.getElementById('expiry_value').value;
+    const unit = document.getElementById('expiry_unit').value;
+    const preview = document.getElementById('expiryPreview');
+    
+    if (!value || !unit || parseInt(value) <= 0) {
+      preview.innerHTML = '';
+      return;
+    }
+    
+    // Calculate future date
+    const now = new Date();
+    const expiryDate = new Date(now);
+    
+    if (unit === 'minutes') {
+      expiryDate.setMinutes(now.getMinutes() + parseInt(value));
+    } else if (unit === 'hours') {
+      expiryDate.setHours(now.getHours() + parseInt(value));
+    } else if (unit === 'days') {
+      expiryDate.setDate(now.getDate() + parseInt(value));
+    } else if (unit === 'months') {
+      expiryDate.setMonth(now.getMonth() + parseInt(value));
+    }
+    
+    // Format date
+    const formattedDate = expiryDate.toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+    
+    preview.innerHTML = `⚠️ File will expire on: <strong>${formattedDate}</strong>`;
+  }
+
+  // Add event listeners for expiry preview
+  document.getElementById('expiry_value').addEventListener('input', updateExpiryPreview);
+  document.getElementById('expiry_unit').addEventListener('change', updateExpiryPreview);
+</script>
+
+<style>
+  /* Style for expiry preview */
+  #expiryPreview {
+    font-size: 0.9rem;
+    color: #666;
+    padding: 5px 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin-top: 5px;
+  }
+  
+  #expiryPreview strong {
+    color: #dc3545;
+  }
+</style>
+{% endblock %}

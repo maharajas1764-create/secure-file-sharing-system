@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}File Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+  <div class="row g-0">
+    <!-- Left Sidebar -->
+    <div class="col-md-3 col-lg-2">
+      <div class="sidebar" style="min-height: 100vh; background: linear-gradient(180deg, #2c3e50 0%, #1a2634 100%);">
+        <!-- User Profile -->
+        <div class="text-center py-5 px-3">
+          <div class="avatar-circle mx-auto mb-3">
+            <span class="avatar-initials">{{ current_user.username[0] | upper }}</span>
+          </div>
+          <h5 class="text-white mb-0">{{ current_user.username }}</h5>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="px-3">
+          <a href="{{ url_for('dashboard') }}" class="nav-link d-flex align-items-center py-3 px-3 mb-2">
+            <i class="fas fa-home me-3"></i><span>Dashboard</span>
+          </a>
+          <a href="{{ url_for('files') }}" class="nav-link d-flex align-items-center py-3 px-3 mb-2 active">
+            <i class="fas fa-folder-open me-3"></i><span>File Details</span>
+          </a>
+          <a href="{{ url_for('logout') }}" class="nav-link d-flex align-items-center py-3 px-3 text-danger">
+            <i class="fas fa-sign-out-alt me-3"></i><span>Logout</span>
+          </a>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-md-9 col-lg-10 bg-light">
+      <div class="p-4" style="min-height: 100vh;">
+        <!-- Header with Date and Time -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h4 class="fw-light"><i class="fas fa-folder-open text-primary me-2"></i>My Files</h4>
+          <div class="bg-white py-2 px-3 rounded-pill shadow-sm small">
+            <i class="far fa-calendar-alt text-primary me-1"></i>
+            <span id="currentDate" class="fw-medium me-2"></span>
+            <i class="far fa-clock text-primary me-1"></i>
+            <span id="realTimeClock">--:--:-- --</span>
+          </div>
+        </div>
+
+        <!-- Files Table -->
+        {% if files %}
+        <div class="card border-0 shadow">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="bg-light">
+                <tr>
+                  <th class="ps-4">File Name</th>
+                  <th>Type</th>
+                  <th>Size</th>
+                  <th>Uploaded</th>
+                  <th>Status & Expiry</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for file in files %}
+                <tr>
+                  <td class="ps-4">
+                    <i class="fas fa-file-alt text-primary me-2"></i>
+                    {{ file.filename }}
+                  </td>
+                  <td><span class="badge bg-secondary">{{ file.filename.split('.')[-1] | upper if '.' in file.filename else 'FILE' }}</span></td>
+                  <td>{{ (file.file_size / 1024) | round(1) }} KB</td>
+                  <td><small>{{ file.upload_date.strftime('%d-%m-%Y %H:%M:%S %p') }}</small></td>
+                  <td>
+                    {% if file.expiry_date %}
+                      {% if file.expiry_date <= current_time %}
+                        <span class="badge bg-danger mb-1">Expired</span><br>
+                        <small class="text-danger">{{ file.expiry_date.strftime('%d-%m-%Y %H:%M:%S %p') }}</small>
+                      {% else %}
+                        <span class="badge bg-success mb-1">Active</span><br>
+                        <small class="text-muted">{{ file.expiry_date.strftime('%d-%m-%Y %H:%M:%S %p') }}</small>
+                      {% endif %}
+                    {% else %}
+                      <span class="badge bg-info">Permanent</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{{ url_for('download_file', share_id=file.share_id) }}" class="btn btn-sm btn-outline-primary me-1">Download</a>
+                    <a href="{{ url_for('share_file', share_id=file.share_id) }}" class="btn btn-sm btn-outline-warning me-1">Share</a>
+                    <a href="{{ url_for('delete_file', file_id=file.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this file?')">Delete</a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+          <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+          <h5>No Files Found</h5>
+          <p class="text-muted small">You haven't uploaded any files yet.</p>
+          <a href="{{ url_for('upload') }}" class="btn btn-primary">Upload File</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function updateDateTime() {
+    const now = new Date();
+    const istTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    
+    // Format date as DD-MM-YYYY
+    const day = istTime.getDate().toString().padStart(2, '0');
+    const month = (istTime.getMonth() + 1).toString().padStart(2, '0');
+    const year = istTime.getFullYear();
+    document.getElementById('currentDate').textContent = `${day}-${month}-${year}`;
+    
+    // Format time in 12-hour format with AM/PM
+    let hours = istTime.getHours();
+    const minutes = istTime.getMinutes().toString().padStart(2, '0');
+    const seconds = istTime.getSeconds().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = (hours % 12 || 12).toString().padStart(2, '0');
+    document.getElementById('realTimeClock').textContent = `${hours}:${minutes}:${seconds} ${ampm}`;
+  }
+  
+  document.addEventListener("DOMContentLoaded", function() {
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+  });
+</script>
+
+<style>
+.sidebar {
+  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+.avatar-circle {
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+.avatar-initials {
+  font-size: 28px;
+  color: white;
+}
+.nav-link {
+  color: rgba(255,255,255,0.8);
+  border-radius: 8px;
+  transition: 0.3s;
+  text-decoration: none;
+}
+.nav-link:hover {
+  color: white;
+  background: rgba(255,255,255,0.1);
+}
+.nav-link.active {
+  color: white;
+  background: rgba(255,255,255,0.15);
+  border-left: 3px solid #f1c40f;
+}
+.table th {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6c757d;
+}
+.badge {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.65rem;
+}
+small {
+  font-size: 0.7rem;
+}
+@media (max-width: 768px) {
+  .btn-sm { padding: 0.2rem 0.3rem; font-size: 0.7rem; }
+}
+</style>
+{% endblock %}

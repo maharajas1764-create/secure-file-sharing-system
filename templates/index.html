@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-6 text-center text-white">
+
+        <h1 class="display-4 fw-bold mb-4">
+            <i class="bi bi-shield-lock"></i> Secure File Sharing
+        </h1>
+
+        <p class="lead mb-4">
+            Share your files securely with AES-256 encryption. 
+            Your files are encrypted before uploading and can only be decrypted with your password.
+        </p>
+
+        <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+
+            <!-- User Login -->
+            <a href="{{ url_for('login') }}" 
+               class="btn btn-light btn-lg px-4">
+                <i class="bi bi-box-arrow-in-right"></i> User Login
+            </a>
+
+            <!-- Admin Login -->
+            <a href="{{ url_for('admin_login') }}" 
+               class="btn btn-warning btn-lg px-4">
+                <i class="bi bi-person-badge"></i> Admin Login
+            </a>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

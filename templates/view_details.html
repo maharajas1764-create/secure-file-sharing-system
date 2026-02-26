@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Account Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3><i class="fas fa-user-circle me-2"></i>My Account</h3>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <!-- ================= USER INFORMATION ================= -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            User Information
+        </div>
+        <div class="card-body">
+
+            <div class="row mb-2">
+                <div class="col-md-4"><strong>Username:</strong></div>
+                <div class="col-md-8">{{ user.username }}</div>
+            </div>
+
+            <div class="row mb-2">
+                <div class="col-md-4"><strong>Email:</strong></div>
+                <div class="col-md-8">{{ user.email }}</div>
+            </div>
+
+            <div class="row mb-2">
+                <div class="col-md-4"><strong>User ID:</strong></div>
+                <div class="col-md-8"><code>{{ user.id }}</code></div>
+            </div>
+
+            <div class="row mb-2">
+                <div class="col-md-4"><strong>Account Created:</strong></div>
+                <div class="col-md-8">
+                    {{ user.created_at.strftime('%d-%m-%Y %H:%M:%S %p') if user.created_at else 'N/A' }}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================= FILE STATISTICS ================= -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            File Details
+        </div>
+        <div class="card-body">
+
+            <div class="row mb-2">
+                <div class="col-md-4"><strong>Total Files:</strong></div>
+                <div class="col-md-8">{{ total_files }}</div>
+            </div>
+
+            <div class="row mb-2">
+                <div class="col-md-4"><strong>Total Storage Used:</strong></div>
+                <div class="col-md-8">
+                    {{ (total_size / 1024 / 1024) | round(2) }} MB
+                </div>
+            </div>
+
+            <!-- Most Recent Upload -->
+            <div class="row mb-2">
+                <div class="col-md-4"><strong>Recent Upload:</strong></div>
+                <div class="col-md-8">
+                    {% if recent_files %}
+                        {{ recent_files[0].upload_date.strftime('%d-%m-%Y %H:%M:%S %p') }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================= RECENT FILES TABLE ================= -->
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            Recent Files
+        </div>
+        <div class="card-body">
+
+            {% if recent_files %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Filename</th>
+                            <th>Size (KB)</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for file in recent_files %}
+                        <tr>
+                            <td>{{ file.filename }}</td>
+                            <td>{{ (file.file_size / 1024) | round(2) }}</td>
+                            <td>{{ file.upload_date.strftime('%d-%m-%Y') }}</td>
+                            <td>
+                                {{ file.filename.split('.')[-1] | upper if '.' in file.filename else 'Unknown' }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <p class="text-center text-muted">No files uploaded yet.</p>
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+
+<style>
+.card {
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.table {
+    font-size: 0.9rem;
+}
+</style>
+
+{% endblock %}

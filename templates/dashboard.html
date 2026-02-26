@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+  <div class="row g-0">
+    <!-- Left Sidebar -->
+    <div class="col-md-3 col-lg-2">
+      <div class="sidebar" style="min-height: 100vh; background: linear-gradient(180deg, #2c3e50 0%, #1a2634 100%);">
+        <!-- User Profile -->
+        <div class="text-center py-5 px-3">
+          <div class="avatar-circle mx-auto mb-3">
+            <span class="avatar-initials">{{ current_user.username[0] | upper }}</span>
+          </div>
+          <h5 class="text-white mb-0">{{ current_user.username }}</h5>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="px-3">
+          <a href="{{ url_for('dashboard') }}" class="nav-link d-flex align-items-center py-3 px-3 mb-2 active">
+            <i class="fas fa-home me-3"></i><span>Dashboard</span>
+          </a>
+          <a href="{{ url_for('upload') }}" class="nav-link d-flex align-items-center py-3 px-3 mb-2">
+            <i class="fas fa-upload me-3"></i><span>Upload File</span>
+          </a>
+          <a href="{{ url_for('view_details') }}" class="nav-link d-flex align-items-center py-3 px-3 mb-2">
+            <i class="fas fa-user me-3"></i><span>Profile</span>
+          </a>
+          <a href="{{ url_for('files') }}" class="nav-link d-flex align-items-center py-3 px-3 mb-2">
+            <i class="fas fa-folder-open me-3"></i><span>File Details</span>
+          </a>
+          <a href="{{ url_for('change_password') }}" class="nav-link d-flex align-items-center py-3 px-3 mb-2">
+            <i class="fas fa-key me-3"></i><span>Change Password</span>
+          </a>
+          <a href="{{ url_for('logout') }}" class="nav-link d-flex align-items-center py-3 px-3 text-danger">
+            <i class="fas fa-sign-out-alt me-3"></i><span>Logout</span>
+          </a>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-md-9 col-lg-10 bg-light">
+      <div class="p-5 d-flex align-items-center" style="min-height: 100vh;">
+        <div class="container">
+          <!-- Header with Date and Time -->
+          <div class="text-center mb-5">
+          <h1>Welcome Back,{{ current_user.username }}</h1>
+            <h1 class="fw-light mb-3">Dashboard</h1>
+            <div class="bg-white py-2 px-4 rounded-pill shadow-sm d-inline-flex align-items-center small">
+              <i class="far fa-calendar-alt text-primary me-2"></i>
+              <span id="currentDate" class="fw-medium me-3"></span>
+              <i class="far fa-clock text-primary me-2"></i>
+              <span id="realTimeClock">--:--:-- --</span>
+            </div>
+          </div>
+
+          <!-- Stats Cards -->
+          <div class="row g-4 justify-content-center">
+            <!-- Total Files -->
+            <div class="col-md-3">
+              <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 text-center">
+                  <p class="text-muted small mb-1">Total Files</p>
+                  <h3 class="fw-bold text-primary mb-0">{{ files|length if files else 0 }}</h3>
+                </div>
+              </div>
+            </div>
+
+            <!-- Active Files -->
+            <div class="col-md-3">
+              <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 text-center">
+                  <p class="text-muted small mb-1">Active</p>
+                  <h3 class="fw-bold text-success mb-0">
+                    {% if files %}
+                      {% set active = namespace(count=0) %}
+                      {% for file in files %}
+                        {% if file.expiry_date and file.expiry_date > current_time %}
+                          {% set active.count = active.count + 1 %}
+                        {% endif %}
+                      {% endfor %}
+                      {{ active.count }}
+                    {% else %}0{% endif %}
+                  </h3>
+                </div>
+              </div>
+            </div>
+
+            <!-- No Expiry Files -->
+            <div class="col-md-3">
+              <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 text-center">
+                  <p class="text-muted small mb-1">No Expiry</p>
+                  <h3 class="fw-bold text-info mb-0">
+                    {% if files %}
+                      {% set no_expiry = namespace(count=0) %}
+                      {% for file in files %}
+                        {% if not file.expiry_date %}
+                          {% set no_expiry.count = no_expiry.count + 1 %}
+                        {% endif %}
+                      {% endfor %}
+                      {{ no_expiry.count }}
+                    {% else %}0{% endif %}
+                  </h3>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expired Files -->
+            <div class="col-md-3">
+              <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 text-center">
+                  <p class="text-muted small mb-1">Expired</p>
+                  <h3 class="fw-bold text-danger mb-0">
+                    {% if files %}
+                      {% set expired = namespace(count=0) %}
+                      {% for file in files %}
+                        {% if file.expiry_date and file.expiry_date <= current_time %}
+                          {% set expired.count = expired.count + 1 %}
+                        {% endif %}
+                      {% endfor %}
+                      {{ expired.count }}
+                    {% else %}0{% endif %}
+                  </h3>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function updateDateTime() {
+    const now = new Date();
+    const istTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    
+    document.getElementById('currentDate').textContent = 
+      `${istTime.getDate().toString().padStart(2,'0')}-${(istTime.getMonth()+1).toString().padStart(2,'0')}-${istTime.getFullYear()}`;
+    
+    let hours = istTime.getHours();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = (hours % 12 || 12).toString().padStart(2, '0');
+    document.getElementById('realTimeClock').textContent = 
+      `${hours}:${istTime.getMinutes().toString().padStart(2,'0')}:${istTime.getSeconds().toString().padStart(2,'0')} ${ampm}`;
+  }
+  
+  document.addEventListener("DOMContentLoaded", function() {
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+  });
+</script>
+
+<style>
+.sidebar {
+  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+.avatar-circle {
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+.avatar-initials {
+  font-size: 28px;
+  color: white;
+}
+.nav-link {
+  color: rgba(255,255,255,0.8);
+  border-radius: 8px;
+  transition: 0.3s;
+  text-decoration: none;
+}
+.nav-link:hover {
+  color: white;
+  background: rgba(255,255,255,0.1);
+}
+.nav-link.active {
+  color: white;
+  background: rgba(255,255,255,0.15);
+  border-left: 3px solid #3498db;
+}
+h3 { font-size: 2rem; }
+@media (max-width: 768px) {
+  .p-5 { padding: 2rem !important; }
+  h3 { font-size: 1.5rem; }
+}
+</style>
+{% endblock %}

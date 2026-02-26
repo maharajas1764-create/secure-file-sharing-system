@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+
+<style>
+/* ===== SIDEBAR STYLE ===== */
+.sidebar-custom {
+    height: 100%;
+    background: linear-gradient(180deg, #141E30, #243B55);
+    box-shadow: 4px 0 15px rgba(0,0,0,0.4);
+}
+
+.admin-avatar i {
+    font-size: 65px;
+    color: #ffffff;
+}
+
+.sidebar-link {
+    color: #ffffff;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.sidebar-link:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateX(5px);
+}
+
+.sidebar-link.active {
+    background: #0d6efd !important;
+    font-weight: 500;
+}
+
+.clock-box {
+    background: rgba(255,255,255,0.1);
+    text-align: center;
+}
+
+.logout-btn:hover {
+    background-color: #bb2d3b;
+}
+
+.card {
+    transition: 0.3s;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+.delete-user-btn {
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: 0.2s;
+}
+.delete-user-btn:hover {
+    color: #bb2d3b;
+    transform: scale(1.1);
+}
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- ===== SIDEBAR ===== -->
+        <div class="col-md-3 col-lg-2 d-md-block sidebar collapse vh-100 p-0">
+            <div class="d-flex flex-column flex-shrink-0 p-3 text-white sidebar-custom">
+                <div class="text-center mb-4">
+                    <div class="admin-avatar mb-2">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+                    <h6 class="mb-0">Administrator</h6>
+                    <small class="text-light">Secure File System</small>
+                </div>
+                <hr class="text-light">
+                <div class="mb-4 p-3 clock-box rounded">
+                    <i class="bi bi-calendar3"></i>
+                    <div id="current-datetime" class="small mt-2"></div>
+                </div>
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active sidebar-link" data-bs-toggle="tab" href="#dashboard">
+                            <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link sidebar-link" data-bs-toggle="tab" href="#users">
+                            <i class="bi bi-people me-2"></i> Users
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link sidebar-link" data-bs-toggle="tab" href="#files">
+                            <i class="bi bi-files me-2"></i> Files
+                        </a>
+                    </li>
+                </ul>
+                <hr class="text-light">
+                <a href="{{ url_for('admin_logout') }}" class="btn btn-danger w-100 logout-btn">
+                    <i class="bi bi-box-arrow-right me-2"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="tab-content mt-4">
+                <!-- ===== DASHBOARD ===== -->
+                <div class="tab-pane fade show active" id="dashboard">
+                    <h3><i class="bi bi-speedometer2"></i> Admin Dashboard</h3>
+                    <div class="row mt-4">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-primary text-white text-center">
+                                <div class="card-body">
+                                    <h6>Total Users</h6>
+                                    <h2>{{ total_users }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-success text-white text-center">
+                                <div class="card-body">
+                                    <h6>Total Files</h6>
+                                    <h2>{{ total_files }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-info text-white text-center">
+                                <div class="card-body">
+                                    <h6>Active Files</h6>
+                                    <h2>{{ active_files }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-danger text-white text-center">
+                                <div class="card-body">
+                                    <h6>Expired Files</h6>
+                                    <h2>{{ expired_files }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== USERS ===== -->
+                <div class="tab-pane fade" id="users">
+                    <h3><i class="bi bi-people"></i> Registered Users</h3>
+                    <div class="mb-3">
+                        <input type="text" id="userSearch" class="form-control"
+                               placeholder="Search by username or email...">
+                    </div>
+                    <div class="card shadow">
+                        <div class="card-header bg-dark text-white">User List</div>
+                        <div class="card-body table-responsive">
+                            <table class="table table-hover align-middle" id="usersTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Joined</th>
+                                        <th>Last Login</th>
+                                        <th>Total Files</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                    <tr>
+                                        <td>{{ user.id }}</td>
+                                        <td>{{ user.username }}</td>
+                                        <td>{{ user.email }}</td>
+                                        <td>{{ user.created_at.strftime('%d-%m-%Y %H:%M:%S') }}</td>
+                                        <td>
+                                            {{ user.last_login.strftime('%d-%m-%Y %H:%M:%S')
+                                               if user.last_login else 'Never' }}
+                                        </td>
+                                        <td>{{ user.files|length }}</td>
+                                        <td>
+                                            {% if user.username != 'admin' %}
+                                            <i class="bi bi-trash delete-user-btn" 
+                                               data-bs-toggle="modal" 
+                                               data-bs-target="#deleteModal"
+                                               data-userid="{{ user.id }}"
+                                               data-username="{{ user.username }}"></i>
+                                            {% else %}
+                                            <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== FILES ===== -->
+                <div class="tab-pane fade" id="files">
+                    <h3><i class="bi bi-files"></i> File Details</h3>
+                    <div class="mb-3">
+                        <input type="text" id="fileSearch" class="form-control"
+                               placeholder="Search by filename...">
+                    </div>
+                    <div class="card shadow">
+                        <div class="card-header bg-dark text-white">All Files</div>
+                        <div class="card-body table-responsive">
+                            <table class="table table-hover align-middle" id="filesTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Filename</th>
+                                        <th>Owner</th>
+                                        <th>Size</th>
+                                        <th>Uploaded</th>
+                                        <th>Expires</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for file in files %}
+                                    <tr>
+                                        <td>{{ file.id }}</td>
+                                        <td>{{ file.filename }}</td>
+                                        <td>{{ file.owner.username }}</td>
+                                        <td>{{ (file.file_size / 1024) | round(2) }} KB</td>
+                                        <td>{{ file.upload_date.strftime('%d-%m-%Y %H:%M:%S') }}</td>
+                                        <td>
+                                            {% if file.expiry_date %}
+                                                {{ file.expiry_date.strftime('%d-%m-%Y %H:%M:%S') }}
+                                            {% else %}
+                                                Never
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if file.expiry_date and file.expiry_date < now %}
+                                                <span class="badge bg-danger">Expired</span>
+                                            {% elif file.expiry_date and file.expiry_date >= now %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-info">No Expiry</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete user <strong id="deleteUsername"></strong>?</p>
+                <p class="text-danger"><small>This will also delete all files uploaded by this user!</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateDateTime() {
+    const now = new Date();
+    document.getElementById("current-datetime").innerHTML =
+        now.toLocaleString();
+}
+updateDateTime();
+setInterval(updateDateTime, 1000);
+
+// Live user search
+document.getElementById("userSearch").addEventListener("keyup", function () {
+    let filter = this.value.toLowerCase();
+    let rows = document.querySelectorAll("#usersTable tbody tr");
+    rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
+    });
+});
+
+// Live file search
+document.getElementById("fileSearch").addEventListener("keyup", function () {
+    let filter = this.value.toLowerCase();
+    let rows = document.querySelectorAll("#filesTable tbody tr");
+    rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
+    });
+});
+
+// Delete user functionality
+document.querySelectorAll('.delete-user-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        let userId = this.getAttribute('data-userid');
+        let username = this.getAttribute('data-username');
+        document.getElementById('deleteUsername').textContent = username;
+        document.getElementById('deleteForm').action = "{{ url_for('admin_delete_user', user_id=0) }}".replace('0', userId);
+    });
+});
+</script>
+
+{% endblock %}
